@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ChatGPT</title>
+
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310a37f'><path d='M21.5 10.5a5.5 5.5 0 0 0-4.5-5.2V3a1 1 0 0 0-1.5-.9L12 4.2 8.5 2.1a1 1 0 0 0-1.5.9v2.3A5.5 5.5 0 0 0 2.5 10.5a5.5 5.5 0 0 0 1.2 3.4l-1.6 2.8a1 1 0 0 0 .9 1.5h2.6A5.5 5.5 0 0 0 11 21.8v-2.3a1 1 0 0 0 2 0v2.3a5.5 5.5 0 0 0 5.4-3.6h2.6a1 1 0 0 0 .9-1.5l-1.6-2.8a5.5 5.5 0 0 0 1.2-3.4z'/></svg>">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --bg-main: #212121;
+            --bg-sidebar: #171717;
+            --bg-input: #2f2f2f;
+            --border-color: #3b3b3b;
+            --text-muted: #b4b4b4;
+            --text-light: #ececec;
+            --accent-green: #10a37f;
+            --bubble-user: #2f2f2f;
+            --admin-red: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* ============ SIDEBAR ============ */
+        #sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            transition: all 0.25s ease-in-out;
+            z-index: 1050;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: -260px;
+            }
+
+            #sidebar.show {
+                left: 0;
+            }
+        }
+
+        .history-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.88rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-item:hover,
+        .history-item.active {
+            background-color: #212121;
+            color: var(--text-light);
+        }
+
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--bg-main);
+            position: relative;
+        }
+
+        .chat-header {
+            height: 54px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px 120px 16px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-inner-container {
+            max-width: 768px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .message-row {
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-row.user {
+            align-items: flex-end;
+        }
+
+        .message-row.assistant {
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            border-radius: 18px;
+            padding: 12px 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .message-row.user .message-bubble {
+            background-color: var(--bubble-user);
+            color: var(--text-light);
+            border-top-right-radius: 4px;
+        }
+
+        .message-row.assistant .message-bubble {
+            background: transparent;
+            padding-left: 0;
+            color: var(--text-light);
+        }
+
+        .prompt-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(33, 33, 33, 0) 0%, rgba(33, 33, 33, 0.95) 40%, rgba(33, 33, 33, 1) 100%);
+            padding: 12px 16px 20px 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .input-wrapper {
+            max-width: 768px;
+            width: 100%;
+            background-color: var(--bg-input);
+            border-radius: 28px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-light);
+            font-size: 0.96rem;
+            resize: none;
+            max-height: 120px;
+            padding: 6px 0;
+            line-height: 1.4;
+        }
+
+        .input-wrapper textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-send {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #ececec;
+            color: #171717;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-send:disabled {
+            background: #4a4a4a;
+            color: #888888;
+            cursor: not-allowed;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .welcome-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10a37f, #0d8c6c);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(16, 163, 127, 0.3);
+        }
+
+        .welcome-icon i {
+            font-size: 32px;
+            color: white;
+        }
+
+        .welcome-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .suggestion-card {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .suggestion-card:hover {
+            background: var(--bg-input);
+            color: var(--text-light);
+        }
+
+        /* ============ ADMIN MODE STYLES ============ */
+        .admin-inbox-item {
+            background: #2a2a2a;
+            border: 1px solid #3b3b3b;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .admin-inbox-item.unread {
+            border-color: var(--admin-red);
+            background: rgba(231, 76, 60, 0.08);
+        }
+
+        .admin-inbox-item .msg-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .admin-inbox-item .msg-text {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-reply-hussain {
+            background: linear-gradient(135deg, #10a37f, #0d8c6c);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-reply-hussain:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 163, 127, 0.4);
+        }
+
+        .btn-reply-ai {
+            background: #2f2f2f;
+            color: var(--text-light);
+            border: 1px solid #4a4a4a;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-reply-ai:hover {
+            background: #3a3a3a;
+        }
+
+        .admin-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .admin-empty i {
+            font-size: 3rem;
+            color: #4a4a4a;
+            margin-bottom: 15px;
+        }
+
+        .modal-content {
+            background-color: #262626;
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .reply-modal-textarea {
+            width: 100%;
+            background: #2f2f2f;
+            border: 1px solid #3b3b3b;
+            border-radius: 12px;
+            padding: 12px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 100px;
+            outline: none;
+        }
+
+        .reply-modal-textarea:focus {
+            border-color: var(--accent-green);
+        }
+
+        .stealth-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #4b4b4b;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .stealth-status-dot.active {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 6px var(--accent-green);
+        }
+
+        /* ============ TOAST ============ */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .custom-toast {
+            background: #2a2a2a;
+            border: 1px solid #3b3b3b;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 320px;
+        }
+
+        .custom-toast.success {
+            border-color: var(--accent-green);
+        }
+
+        .custom-toast.info {
+            border-color: #3498db;
+        }
+
+        .custom-toast.warning {
+            border-color: #f39c12;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .admin-mode-indicator {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: var(--admin-red);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            gap: 3px;
+            align-items: center;
+        }
+
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+
+            30% {
+                opacity: 1;
+                transform: translateY(-4px);
+            }
+        }
+
+        /* ============ LANGUAGE POPUP ============ */
+        .language-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .language-popup {
+            background: #262626;
+            border: 1px solid #3b3b3b;
+            border-radius: 20px;
+            padding: 30px 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            animation: popIn 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .lang-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10a37f, #0d8c6c);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(16, 163, 127, 0.35);
+        }
+
+        .lang-icon i {
+            font-size: 28px;
+            color: white;
+        }
+
+        .lang-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .lang-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+
+        .lang-option {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border-radius: 14px;
+            background: #2f2f2f;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .lang-option:hover {
+            background: #3a3a3a;
+            border-color: var(--accent-green);
+            transform: translateY(-1px);
+        }
+
+        .lang-option.selected {
+            background: rgba(16, 163, 127, 0.15);
+            border-color: var(--accent-green);
+        }
+
+        .lang-flag {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .lang-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .lang-sample {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .lang-continue {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #10a37f, #0d8c6c);
+            color: white;
+            border: none;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .lang-continue:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(16, 163, 127, 0.4);
+        }
+
+        .lang-continue:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .lang-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LANGUAGE POPUP (pehli baar) -->
+    <div class="language-popup-overlay" id="langPopup" style="display: none;">
+        <div class="language-popup">
+            <button class="lang-close" id="langClose" onclick="closeLangPopup()">×</button>
+            <div class="lang-icon">
+                <i class="bi bi-translate"></i>
+            </div>
+            <div class="lang-title">Zubaan Chunein</div>
+            <div class="lang-subtitle">Aap kis zubaan mein baat karna chahte hain?<br>(Choose your language)</div>
+
+            <div class="lang-option" onclick="selectLanguage('urdu')" id="lang-opt-urdu">
+                <div class="lang-flag">🇵🇰</div>
+                <div>
+                    <div class="lang-name">Roman Urdu</div>
+                    <div class="lang-sample">"Kaise hain aap? Kya haal hai?"</div>
+                </div>
+            </div>
+
+            <div class="lang-option" onclick="selectLanguage('english')" id="lang-opt-english">
+                <div class="lang-flag">🇬🇧</div>
+                <div>
+                    <div class="lang-name">English</div>
+                    <div class="lang-sample">"How are you? What's up?"</div>
+                </div>
+            </div>
+
+            <button class="lang-continue" id="lang-continue-btn" onclick="confirmLanguage()" disabled>
+                Continue →
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ADMIN MODE INDICATOR -->
+    <div class="admin-mode-indicator" id="admin-indicator" style="display: none;">
+        <i class="bi bi-shield-fill"></i> ADMIN MODE
+    </div>
+
+    <div id="app-container">
+
+        <!-- SIDEBAR -->
+        <div id="sidebar">
+            <div class="p-3 d-flex align-items-center justify-content-between">
+                <button class="btn btn-sm text-light border-0 d-flex align-items-center gap-2 fw-semibold"
+                    onclick="handleNewChat()">
+                    <i class="bi bi-pencil-square"></i> New chat
+                </button>
+                <button class="btn btn-sm text-secondary d-md-none" onclick="toggleSidebar()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="flex-grow-1 overflow-auto px-2">
+                <div class="text-uppercase px-2 py-2" style="font-size: 0.65rem; color: #737373; font-weight: 700;">
+                    Recent</div>
+                <div class="history-item active" onclick="showFakeChatHistory('pakistan')">
+                    <i class="bi bi-chat-left"></i> Pakistan Studies Notes
+                </div>
+            </div>
+
+            <div
+                class="p-3 border-top border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2" style="cursor: pointer;" onclick="openLanguageChange()"
+                    title="Change language">
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-dark"
+                        style="width: 28px; height: 28px; font-weight: 600; font-size: 0.8rem;">
+                        <span>U</span>
+                    </div>
+                    <span class="small text-muted">Free User</span>
+                </div>
+                <span class="stealth-status-dot" id="live-dot" title="Connected"></span>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div id="main-content">
+
+            <!-- HEADER -->
+            <div class="chat-header">
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm text-light p-1 d-md-none border-0" onclick="toggleSidebar()">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="triggerPanic()" title="Reset">
+                        <i class="bi bi-openai fs-5 text-success"></i>
+                        <span class="fw-semibold small" style="color: #c5c5c5;">ChatGPT <span
+                                class="badge bg-secondary text-uppercase fw-normal ms-1" style="font-size: 0.6rem;">4o
+                                mini</span></span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <div class="panic-trigger" onclick="triggerPanic()" title="Emergency Reset (Esc)"
+                        style="cursor: pointer; padding: 6px 10px; border-radius: 8px;">
+                        <i class="bi bi-shield-check"></i>
+                        <span class="small d-none d-sm-inline ms-1">Reset</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHAT BOX -->
+            <div id="chat-box">
+                <div class="chat-inner-container" id="messages-container">
+                    <!-- Loaded by JS -->
+                </div>
+            </div>
+
+            <!-- INPUT BAR -->
+            <div class="prompt-footer">
+                <div class="input-wrapper">
+                    <textarea id="prompt-input" rows="1" placeholder="Message ChatGPT..." onkeydown="handleKey(event)"
+                        oninput="autoGrow(this); updateSendBtn();"></textarea>
+                    <button class="btn-send" id="send-btn" onclick="submitMessage()" disabled>
+                        <i class="bi bi-arrow-up-short fs-4"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- REPLY MODAL (Admin only) -->
+    <div class="modal fade" id="replyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="modal-title fw-semibold" id="replyModalTitle">Reply</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <div class="small text-muted mb-1">Original message:</div>
+                        <div class="p-2 rounded" style="background: #2a2a2a; font-size: 0.85rem;" id="originalMsgText">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="small text-muted mb-1">Your reply:</label>
+                        <textarea class="reply-modal-textarea" id="replyTextarea"
+                            placeholder="Type your reply..."></textarea>
+                    </div>
+                    <div class="small text-muted">
+                        <i class="bi bi-info-circle"></i> <span id="replyModalHint"></span>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="sendReplyFromModal()">
+                        <i class="bi bi-send-fill"></i> Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ============================================================
+           FIREBASE CONFIG
+           ============================================================ */
+        const firebaseConfig = {
+            apiKey: "AIzaSyBs9-mTkgNTQR8bh2V6kM_9JWHvOHrA0zc",
+            authDomain: "chatapphussain.firebaseapp.com",
+            databaseURL: "https://chatapphussain-default-rtdb.firebaseio.com/",
+            projectId: "chatapphussain",
+            storageBucket: "chatapphussain.firebasestorage.app",
+            messagingSenderId: "125265046940",
+            appId: "1:125265046940:web:d1dee357c35df1dded2c59"
+        };
+
+        let db = null, inboxRef = null, repliesRef = null, isFirebaseConfigured = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            inboxRef = db.ref("hidden_chat/inbox");
+            repliesRef = db.ref("hidden_chat/replies");
+            isFirebaseConfigured = true;
+            console.log("✅ Firebase connected");
+        } catch (err) {
+            console.error("Firebase init failed:", err);
+        }
+
+        /* ============================================================
+           STATE
+           ============================================================ */
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdmin = urlParams.get('admin') === 'hussain';
+
+        let sessionId = localStorage.getItem('chat_session_id');
+        if (!sessionId) {
+            sessionId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chat_session_id', sessionId);
+        }
+
+        let selectedLanguage = localStorage.getItem('chat_language') || '';
+        let tempLanguage = '';
+
+        let currentReplyMsgId = null;
+        let currentReplyType = null;
+        let seenInboxIds = new Set();
+        let seenReplyIds = new Set();
+
+        const promptInput = document.getElementById('prompt-input');
+        const sendBtn = document.getElementById('send-btn');
+        const messagesContainer = document.getElementById('messages-container');
+        const replyModal = new bootstrap.Modal(document.getElementById('replyModal'));
+
+        /* ============================================================
+           PLACEHOLDER
+           ============================================================ */
+        function updatePlaceholder() {
+            if (selectedLanguage === 'urdu') {
+                promptInput.placeholder = 'Apna sawal likhein... (Roman Urdu)';
+            } else if (selectedLanguage === 'english') {
+                promptInput.placeholder = 'Message ChatGPT...';
+            } else {
+                promptInput.placeholder = 'Message ChatGPT...';
+            }
+        }
+
+        /* ============================================================
+           LANGUAGE POPUP
+           ============================================================ */
+        function showLanguagePopup() {
+            document.getElementById('langPopup').style.display = 'flex';
+            tempLanguage = selectedLanguage || '';
+            document.getElementById('lang-opt-urdu').classList.toggle('selected', tempLanguage === 'urdu');
+            document.getElementById('lang-opt-english').classList.toggle('selected', tempLanguage === 'english');
+            document.getElementById('lang-continue-btn').disabled = !tempLanguage;
+            // Show close button only if already selected before
+            document.getElementById('langClose').style.display = selectedLanguage ? 'block' : 'none';
+        }
+
+        function selectLanguage(lang) {
+            tempLanguage = lang;
+            document.getElementById('lang-opt-urdu').classList.toggle('selected', lang === 'urdu');
+            document.getElementById('lang-opt-english').classList.toggle('selected', lang === 'english');
+            document.getElementById('lang-continue-btn').disabled = false;
+        }
+
+        function confirmLanguage() {
+            if (!tempLanguage) return;
+            selectedLanguage = tempLanguage;
+            localStorage.setItem('chat_language', selectedLanguage);
+            document.getElementById('langPopup').style.display = 'none';
+            updatePlaceholder();
+            if (!isAdmin) showPublicWelcome();
+        }
+
+        function closeLangPopup() {
+            if (selectedLanguage) {
+                document.getElementById('langPopup').style.display = 'none';
+            }
+        }
+
+        function openLanguageChange() {
+            showLanguagePopup();
+        }
+
+        /* ============================================================
+           PANIC
+           ============================================================ */
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') triggerPanic();
+        });
+
+        let touchCount = 0, touchTimer = null;
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 3) {
+                touchCount++;
+                clearTimeout(touchTimer);
+                touchTimer = setTimeout(() => { touchCount = 0; }, 600);
+                if (touchCount >= 1) {
+                    triggerPanic();
+                    touchCount = 0;
+                    if (navigator.vibrate) navigator.vibrate(50);
+                }
+            }
+        }, { passive: true });
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        function showToast(message, type) {
+            type = type || 'info';
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast ' + type;
+            const icons = { success: 'check-circle-fill', info: 'info-circle-fill', warning: 'exclamation-triangle-fill' };
+            toast.innerHTML = '<i class="bi bi-' + (icons[type] || 'info-circle-fill') + '"></i> ' + message;
+            container.appendChild(toast);
+            setTimeout(function () {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(400px)';
+                setTimeout(function () { toast.remove(); }, 300);
+            }, 3500);
+        }
+
+        /* ============================================================
+           INIT
+           ============================================================ */
+        function initApp() {
+            if (isAdmin) {
+                document.getElementById('admin-indicator').style.display = 'flex';
+                document.title = 'ChatGPT';
+                showAdminInbox();
+                listenToInbox();
+                updatePlaceholder();
+            } else {
+                updatePlaceholder();
+                if (!selectedLanguage) {
+                    showLanguagePopup();
+                }
+                showPublicWelcome();
+                listenToReplies();
+            }
+        }
+
+        /* ============================================================
+           PUBLIC WELCOME (FIXED - no nested template issues)
+           ============================================================ */
+        function showPublicWelcome() {
+            const isUrdu = selectedLanguage === 'urdu';
+
+            const title = isUrdu ? 'Aaj main aap ki kya madad karoon?' : 'What can I help with today?';
+            const subtitle = isUrdu ? 'Studies, coding, writing ya kisi bhi sawal mein madad.' : 'Ask me anything — studies, coding, writing, or everyday questions.';
+
+            const card1Title = 'Pakistan Studies';
+            const card1Desc = isUrdu ? '1973 Aayin ka khulasa' : 'Summarize 1973 Constitution';
+            const card1Prompt = isUrdu ? 'Pakistan ka 1973 ka aayin mukhtasir mein batayein.' : 'Summarize the 1973 Constitution of Pakistan briefly.';
+
+            const card2Title = isUrdu ? 'Physics' : 'Physics Concept';
+            const card2Desc = isUrdu ? 'Newton ke qawaneen' : "Explain Newton's Laws";
+            const card2Prompt = isUrdu ? 'Newton ke qawaneen aasan misalon ke saath samjhayein.' : "Explain Newton's Laws with simple daily examples.";
+
+            const html =
+                '<div class="welcome-screen">' +
+                '<div class="welcome-icon"><i class="bi bi-openai"></i></div>' +
+                '<div class="welcome-title">' + title + '</div>' +
+                '<div class="welcome-subtitle">' + subtitle + '</div>' +
+                '<div class="row g-2 text-start">' +
+                '<div class="col-6">' +
+                '<div class="suggestion-card" data-prompt="' + card1Prompt.replace(/"/g, '&quot;') + '" onclick="handleSuggestionClick(this)">' +
+                '<div class="fw-medium text-light">' + card1Title + '</div>' +
+                '<div>' + card1Desc + '</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-6">' +
+                '<div class="suggestion-card" data-prompt="' + card2Prompt.replace(/"/g, '&quot;') + '" onclick="handleSuggestionClick(this)">' +
+                '<div class="fw-medium text-light">' + card2Title + '</div>' +
+                '<div>' + card2Desc + '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+
+            messagesContainer.innerHTML = html;
+        }
+
+        function handleSuggestionClick(el) {
+            const prompt = el.getAttribute('data-prompt');
+            if (prompt) {
+                promptInput.value = prompt;
+                sendBtn.disabled = false;
+                submitMessage();
+            }
+        }
+
+        /* ============================================================
+           SEND MESSAGE
+           ============================================================ */
+        function submitMessage() {
+            const text = promptInput.value.trim();
+            if (!text) return;
+
+            promptInput.value = "";
+            promptInput.style.height = "auto";
+            sendBtn.disabled = true;
+
+            if (isAdmin) {
+                addLocalAIBubble(text);
+                return;
+            }
+
+            sendToInbox(text);
+        }
+
+        function sendToInbox(text) {
+            const welcome = messagesContainer.querySelector('.welcome-screen');
+            if (welcome) messagesContainer.innerHTML = '';
+
+            addUserBubble(text);
+
+            const aiId = 'ai-' + Date.now();
+            addAIBubble(aiId, '<span class="typing-indicator"><span></span><span></span><span></span></span>');
+
+            if (isFirebaseConfigured && inboxRef) {
+                const msgId = inboxRef.push({
+                    sessionId: sessionId,
+                    text: text,
+                    language: selectedLanguage,
+                    timestamp: Date.now(),
+                    replied: false
+                }).key;
+
+                setTimeout(function () {
+                    checkAndAutoReply(msgId, text, aiId);
+                }, 30000);
+            } else {
+                setTimeout(function () {
+                    const target = document.getElementById(aiId);
+                    if (target) target.innerHTML = generateAIResponse(text);
+                }, 1200);
+            }
+        }
+
+        async function checkAndAutoReply(msgId, originalText, aiBubbleId) {
+            if (!isFirebaseConfigured || !inboxRef) return;
+
+            const snap = await inboxRef.child(msgId).once('value');
+            const data = snap.val();
+            if (!data || data.replied) return;
+
+            // Get real AI response
+            const aiResponse = await generateAIResponse(originalText);
+
+            // Find the bubble and show response
+            const target = document.getElementById(aiBubbleId);
+            if (target) {
+                target.innerHTML = aiResponse;
+            } else {
+                // If bubble was removed, add a new one
+                addAIBubble('auto-' + Date.now(), aiResponse);
+            }
+            scrollToBottom();
+
+            // Mark as auto-replied
+            inboxRef.child(msgId).update({ replied: true, autoReplied: true });
+        }
+
+        function listenToReplies() {
+            if (!isFirebaseConfigured || !repliesRef) return;
+
+            repliesRef.orderByChild('sessionId').equalTo(sessionId).on('child_added', function (snap) {
+                const data = snap.val();
+                if (!data || seenReplyIds.has(snap.key)) return;
+                seenReplyIds.add(snap.key);
+
+                const typingBubbles = messagesContainer.querySelectorAll('[id^="ai-"]');
+                const lastTyping = typingBubbles[typingBubbles.length - 1];
+
+                if (lastTyping) {
+                    lastTyping.innerHTML = escapeHtml(data.text);
+                } else {
+                    addAIBubble('h-' + Date.now(), escapeHtml(data.text));
+                }
+                scrollToBottom();
+            });
+        }
+
+        /* ============================================================
+           ADMIN VIEW
+           ============================================================ */
+        function showAdminInbox() {
+            messagesContainer.innerHTML =
+                '<div class="p-3">' +
+                '<div class="d-flex align-items-center justify-content-between mb-3">' +
+                '<h5 class="mb-0 fw-semibold"><i class="bi bi-inbox-fill text-danger"></i> Inbox</h5>' +
+                '<span class="badge bg-secondary" id="inbox-count">0</span>' +
+                '</div>' +
+                '<div class="small text-muted mb-3"><i class="bi bi-info-circle"></i> Messages from public users. Choose how to reply.</div>' +
+                '<div id="admin-inbox-list">' +
+                '<div class="admin-empty"><i class="bi bi-inbox"></i><p>No messages yet.<br><span class="small">Wait for someone to send a message...</span></p></div>' +
+                '</div>' +
+                '</div>';
+        }
+
+        function listenToInbox() {
+            if (!isFirebaseConfigured || !inboxRef) return;
+
+            inboxRef.limitToLast(100).on('child_added', function (snap) {
+                const data = snap.val();
+                if (!data || seenInboxIds.has(snap.key)) return;
+                seenInboxIds.add(snap.key);
+
+                if (!data.replied) {
+                    const preview = data.text.substring(0, 30) + (data.text.length > 30 ? '...' : '');
+                    showToast('New: "' + preview + '"', 'info');
+                }
+                renderInboxList();
+            });
+
+            inboxRef.on('child_changed', function () { renderInboxList(); });
+        }
+
+        function renderInboxList() {
+            if (!isFirebaseConfigured || !inboxRef) return;
+
+            inboxRef.limitToLast(50).once('value', function (snap) {
+                const list = document.getElementById('admin-inbox-list');
+                if (!list) return;
+
+                const data = snap.val();
+                if (!data) {
+                    list.innerHTML = '<div class="admin-empty"><i class="bi bi-inbox"></i><p>No messages yet.</p></div>';
+                    const cnt = document.getElementById('inbox-count');
+                    if (cnt) cnt.textContent = '0';
+                    return;
+                }
+
+                const msgs = Object.entries(data).map(function (entry) {
+                    return Object.assign({ id: entry[0] }, entry[1]);
+                }).sort(function (a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+
+                const unreadCount = msgs.filter(function (m) { return !m.replied; }).length;
+                const cnt = document.getElementById('inbox-count');
+                if (cnt) cnt.textContent = unreadCount;
+
+                let html = '';
+                msgs.forEach(function (m) {
+                    const time = new Date(m.timestamp).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
+                    const isUnread = !m.replied;
+                    const lang = m.language ? ' (' + m.language + ')' : '';
+                    const safeText = escapeHtml(m.text).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+
+                    html += '<div class="admin-inbox-item ' + (isUnread ? 'unread' : '') + '" data-id="' + m.id + '">' +
+                        '<div class="msg-header">' +
+                        '<span><i class="bi bi-person-circle"></i> ' + m.sessionId.substring(0, 12) + '...' + lang + '</span>' +
+                        '<span>' + time + (isUnread ? ' · <strong class="text-danger">NEW</strong>' : '') + '</span>' +
+                        '</div>' +
+                        '<div class="msg-text">' + escapeHtml(m.text) + '</div>';
+
+                    if (isUnread) {
+                        html += '<div class="admin-actions">' +
+                            '<button class="btn-reply-hussain" onclick="openReplyModal(\'' + m.id + '\', \'hussain\', \'' + safeText + '\')">' +
+                            '<i class="bi bi-person-heart"></i> Reply as Hussain' +
+                            '</button>' +
+                            '<button class="btn-reply-ai" onclick="openReplyModal(\'' + m.id + '\', \'ai\', \'' + safeText + '\')">' +
+                            '<i class="bi bi-robot"></i> Reply as ChatGPT' +
+                            '</button>' +
+                            '</div>';
+                    } else {
+                        const status = m.autoReplied ? 'auto-AI' : (m.replyType === 'hussain' ? 'as Hussain' : 'as AI');
+                        html += '<div class="admin-actions"><span class="small text-success"><i class="bi bi-check-circle-fill"></i> Replied (' + status + ')</span></div>';
+                    }
+
+                    html += '</div>';
+                });
+
+                list.innerHTML = html;
+            });
+        }
+
+         function openReplyModal(msgId, replyType, originalText) {
+    currentReplyMsgId = msgId;
+    currentReplyType = replyType;
+
+    document.getElementById('replyModalTitle').innerHTML = replyType === 'hussain'
+      ? '<i class="bi bi-person-heart text-success"></i> Reply as Hussain'
+      : '<i class="bi bi-robot text-info"></i> Reply as ChatGPT';
+
+    document.getElementById('originalMsgText').textContent = originalText;
+    document.getElementById('replyTextarea').value = '';
+
+    document.getElementById('replyModalHint').textContent = replyType === 'hussain'
+      ? 'This will appear as YOUR real message.'
+      : 'This will appear as a fake ChatGPT response.';
+
+    if (replyType === 'ai') {
+      // Show loading in modal while fetching
+      document.getElementById('replyTextarea').value = 'Loading AI response...';
+      document.getElementById('replyTextarea').disabled = true;
+      
+      generateAIResponse(originalText).then(function(aiText) {
+        document.getElementById('replyTextarea').value = aiText.replace(/<[^>]*>/g, '');
+        document.getElementById('replyTextarea').disabled = false;
+      });
+    } else {
+      document.getElementById('replyTextarea').disabled = false;
+    }
+
+    replyModal.show();
+    setTimeout(function() { 
+      if (!document.getElementById('replyTextarea').disabled) {
+        document.getElementById('replyTextarea').focus(); 
+      }
+    }, 300);
+  }
+
+        function sendReplyFromModal() {
+            const text = document.getElementById('replyTextarea').value.trim();
+            if (!text) { showToast('Please type a reply', 'warning'); return; }
+            if (!isFirebaseConfigured || !inboxRef || !repliesRef) { showToast('Firebase not configured', 'warning'); return; }
+
+            inboxRef.child(currentReplyMsgId).once('value', function (snap) {
+                const original = snap.val();
+                if (!original) return;
+
+                repliesRef.push({
+                    sessionId: original.sessionId,
+                    text: text,
+                    replyType: currentReplyType,
+                    timestamp: Date.now(),
+                    inReplyTo: currentReplyMsgId
+                });
+
+                inboxRef.child(currentReplyMsgId).update({
+                    replied: true,
+                    replyType: currentReplyType,
+                    repliedAt: Date.now()
+                });
+
+                showToast('Replied as ' + (currentReplyType === 'hussain' ? 'Hussain ✅' : 'ChatGPT 🤖'), 'success');
+                replyModal.hide();
+                renderInboxList();
+            });
+        }
+
+        /* ============================================================
+           AI RESPONSE GENERATOR (Language-aware)
+           ============================================================ */
+        async function generateAIResponse(prompt) {
+            const isUrdu = selectedLanguage === 'urdu';
+
+            // Build a strong system prompt so the AI replies like ChatGPT
+            const systemPrompt = isUrdu
+                ? 'You are ChatGPT. Reply in Roman Urdu (Urdu written in English letters). Be helpful, accurate, and concise. Answer exactly what the user asks.'
+                : 'You are ChatGPT. Be helpful, accurate, and concise. Answer exactly what the user asks.';
+
+            try {
+                // Pollinations Text API - free, no key, CORS enabled
+                const url = 'https://text.pollinations.ai/' + encodeURIComponent(prompt) +
+                    '?model=openai&system=' + encodeURIComponent(systemPrompt);
+
+                const response = await fetch(url, { method: 'GET' });
+
+                if (!response.ok) throw new Error('API error: ' + response.status);
+
+                let text = await response.text();
+
+                // Clean up any accidental HTML tags from the API
+                text = text.trim();
+
+                if (!text) throw new Error('Empty response');
+
+                // Return as safe HTML (line breaks preserved)
+                return escapeHtml(text).replace(/\n/g, '<br>');
+
+            } catch (err) {
+                console.error('AI API failed:', err);
+
+                // Fallback: simple but relevant response if API fails
+                return isUrdu
+                    ? 'Maazrat, AI se jawab nahi mil saka. Baraye meharbani thori der baad dobara koshish karein.'
+                    : 'Sorry, I could not get an answer from the AI. Please try again in a moment.';
+            }
+        }
+        /* ============================================================
+           MESSAGE HELPERS
+           ============================================================ */
+        function addUserBubble(text) {
+            const row = document.createElement('div');
+            row.className = 'message-row user';
+            row.innerHTML = '<div class="message-bubble">' + escapeHtml(text) + '</div>';
+            messagesContainer.appendChild(row);
+            scrollToBottom();
+        }
+
+        function addAIBubble(id, html) {
+            const row = document.createElement('div');
+            row.className = 'message-row assistant';
+            row.innerHTML =
+                '<div class="d-flex align-items-center gap-2 mb-2 text-success">' +
+                '<i class="bi bi-openai"></i> <span class="fw-semibold small">ChatGPT</span>' +
+                '</div>' +
+                '<div class="message-bubble" id="' + id + '">' + html + '</div>';
+            messagesContainer.appendChild(row);
+            scrollToBottom();
+        }
+
+        function addLocalAIBubble(text) {
+            const row = document.createElement('div');
+            row.className = 'message-row assistant';
+            row.innerHTML =
+                '<div class="d-flex align-items-center gap-2 mb-2 text-success">' +
+                '<i class="bi bi-openai"></i> <span class="fw-semibold small">ChatGPT</span>' +
+                '</div>' +
+                '<div class="message-bubble">' + escapeHtml(text) + '</div>';
+            messagesContainer.appendChild(row);
+            scrollToBottom();
+        }
+
+        /* ============================================================
+           HANDLERS
+           ============================================================ */
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitMessage();
+            }
+        }
+
+        function updateSendBtn() {
+            sendBtn.disabled = promptInput.value.trim().length === 0;
+        }
+
+        function autoGrow(el) {
+            el.style.height = "5px";
+            el.style.height = (el.scrollHeight) + "px";
+        }
+
+        function scrollToBottom() {
+            const box = document.getElementById('chat-box');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        function sendPredefined(text) {
+            promptInput.value = text;
+            sendBtn.disabled = false;
+            submitMessage();
+        }
+
+        function showFakeChatHistory(type) {
+            if (isAdmin) return;
+            messagesContainer.innerHTML = '';
+            const isUrdu = selectedLanguage === 'urdu';
+            addUserBubble(isUrdu ? 'Pakistan ka 1973 ka aayin mukhtasir mein batayein.' : 'Summarize the 1973 Constitution of Pakistan briefly.');
+
+            setTimeout(async function () {
+                const aiResponse = await generateAIResponse(
+                    isUrdu ? 'Pakistan ka 1973 ka aayin mukhtasir mein batayein' : 'Summarize the 1973 Constitution of Pakistan briefly'
+                );
+                addAIBubble('h1', aiResponse);
+            }, 300);
+        }
+
+        function handleNewChat() {
+            if (isAdmin) {
+                renderInboxList();
+            } else {
+                showPublicWelcome();
+                promptInput.value = '';
+                sendBtn.disabled = true;
+            }
+        }
+
+        function triggerPanic() {
+            if (isAdmin) {
+                window.location.href = window.location.pathname;
+            } else {
+                document.getElementById('langPopup').style.display = 'none';
+                messagesContainer.innerHTML = '';
+                showPublicWelcome();
+                promptInput.value = '';
+                sendBtn.disabled = true;
+            }
+        }
+
+        function escapeHtml(string) {
+            if (!string) return '';
+            const div = document.createElement('div');
+            div.innerText = string;
+            return div.innerHTML;
+        }
+
+        /* ============================================================
+           BOOT
+           ============================================================ */
+        initApp();
+    </script>
+
+</body>
+
+</html>

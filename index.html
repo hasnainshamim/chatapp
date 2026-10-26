@@ -1225,40 +1225,63 @@
             });
         }
 
-         function openReplyModal(msgId, replyType, originalText) {
+  /* ============================================================
+     FIXED: REPLY MODAL (Auto-fill for AI, Empty for Hussain)
+     ============================================================ */
+  function openReplyModal(msgId, replyType, originalText) {
     currentReplyMsgId = msgId;
     currentReplyType = replyType;
 
+    const textarea = document.getElementById('replyTextarea');
+
+    // Set Modal Title
     document.getElementById('replyModalTitle').innerHTML = replyType === 'hussain'
       ? '<i class="bi bi-person-heart text-success"></i> Reply as Hussain'
       : '<i class="bi bi-robot text-info"></i> Reply as ChatGPT';
 
+    // Show Original Message
     document.getElementById('originalMsgText').textContent = originalText;
-    document.getElementById('replyTextarea').value = '';
 
-    document.getElementById('replyModalHint').textContent = replyType === 'hussain'
-      ? 'This will appear as YOUR real message.'
-      : 'This will appear as a fake ChatGPT response.';
+    // Reset textarea
+    textarea.value = '';
+    textarea.disabled = false;
 
-    if (replyType === 'ai') {
-      // Show loading in modal while fetching
-      document.getElementById('replyTextarea').value = 'Loading AI response...';
-      document.getElementById('replyTextarea').disabled = true;
+    if (replyType === 'hussain') {
+      // ============ REPLY AS HUSSAIN ============
+      // Khali chhor dein taake aap khud likhein
+      textarea.placeholder = 'Yahan apna message likhein...';
+      document.getElementById('replyModalHint').textContent = 'This will appear as YOUR real message.';
       
-      generateAIResponse(originalText).then(function(aiText) {
-        document.getElementById('replyTextarea').value = aiText.replace(/<[^>]*>/g, '');
-        document.getElementById('replyTextarea').disabled = false;
-      });
-    } else {
-      document.getElementById('replyTextarea').disabled = false;
-    }
+      replyModal.show();
+      setTimeout(function() { textarea.focus(); }, 300);
 
-    replyModal.show();
-    setTimeout(function() { 
-      if (!document.getElementById('replyTextarea').disabled) {
-        document.getElementById('replyTextarea').focus(); 
-      }
-    }, 300);
+    } else {
+      // ============ REPLY AS CHATGPT (AI AUTO-FILL) ============
+      textarea.placeholder = 'AI response will load here...';
+      textarea.value = '⏳ Loading AI response... (Please wait)';
+      textarea.disabled = true; // Lock input while loading
+      document.getElementById('replyModalHint').textContent = 'This will appear as a fake ChatGPT response.';
+
+      replyModal.show();
+
+      // Fetch AI response in background
+      generateAIResponse(originalText).then(function(aiText) {
+        // Remove HTML tags for textarea
+        const cleanText = aiText.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>?/gm, '');
+        
+        textarea.value = cleanText;
+        textarea.disabled = false; // Unlock so you can edit if needed
+        textarea.placeholder = 'Edit AI response if you want...';
+        
+        // Focus at the end
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }).catch(function(err) {
+        textarea.value = '';
+        textarea.disabled = false;
+        textarea.placeholder = 'Error loading AI. Please type manually.';
+      });
+    }
   }
 
         function sendReplyFromModal() {

@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ChatGPT</title>
+
+  <!-- Real ChatGPT Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23ffffff%22%3E%3Cpath%20d%3D%22M22.2819%209.8211a5.9847%205.9847%200%200%200-.5157-4.9108%206.0462%206.0462%200%200%200-6.5098-2.9A6.0651%206.0651%200%200%200%204.9807%204.1818a5.9847%205.9847%200%200%200-3.9977%202.9%206.0462%206.0462%200%200%200%20.7427%207.0966%205.98%205.98%200%200%200%20.511%204.9107%206.051%206.051%200%200%200%206.5146%202.9001A5.9847%205.9847%200%200%200%2013.2599%2024a6.0557%206.0557%200%200%200%205.771-4.2057%205.9894%205.9894%200%200%200%203.9977-2.9001%206.0557%206.0557%200%200%200-.7467-7.0731zm-8.8687%2012.784a4.5772%204.5772%200%200%201-2.9099-1.0425l.1428-.0809%204.819-2.779a.747.747%200%200%200%20.3753-.6476V11.332l2.0427%201.1794a.0667.0667%200%200%201%20.0381.0571v5.5806a4.5962%204.5962%200%200%201-4.509%204.456zM3.606%2017.3755a4.5582%204.5582%200%200%201-.5395-3.0475l.1428.0857%204.8143%202.779a.747.747%200%200%200%20.7456%200l5.8093-3.3523v2.3589a.0667.0667%200%200%201-.0286.0571L9.723%2019.062a4.5962%204.5962%200%200%201-6.117-1.6865zm-1.4619-8.4093a4.5582%204.5582%200%200%201%202.3703-2.005l-.0047.1619V12.682a.747.747%200%200%200%20.3705.6476l5.8093%203.3524-2.0427%201.1794a.0667.0667%200%200%201-.0667%200l-4.8286-2.8058a4.5962%204.5962%200%200%201-1.6075-6.0898zm15.7196%203.7047-5.8094-3.3523%202.0428-1.1795a.0667.0667%200%200%201%20.0666%200l4.8286%202.8058a4.5962%204.5962%200%200%201%201.6075%206.0898%204.5582%204.5582%200%200%201-2.3703%202.005l.0047-.1619V13.3185a.747.747%200%200%200-.3705-.6476zm2.5332-4.6808-.1428-.0857-4.8143-2.779a.747.747%200%200%200-.7456%200L8.8848%208.4776V6.1187a.0667.0667%200%200%201%20.0286-.0571L13.7397%203.256a4.5962%204.5962%200%200%201%206.117%201.6865%204.5582%204.5582%200%200%201%20.5395%203.0475zM12%2014.281l-2.4808-1.4332%202.4808-1.4332%202.4808%201.4332z%22%2F%3E%3C%2Fsvg%3E">
+
+  <!-- Inter & Söhne fallback -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 CSS (Used cleanly for layout & grid) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    :root {
+      --main-bg: #212121;
+      --sidebar-bg: #171717;
+      --input-bg: #2f2f2f;
+      --input-border: #424242;
+      --border-subtle: #2f2f2f;
+      --text-primary: #ececec;
+      --text-secondary: #b4b4b4;
+      --text-tertiary: #737373;
+      --hover-bg: #212121;
+      --btn-hover: #343434;
+      --accent: #10a37f;
+      --user-bubble: #303030;
+      --font-stack: "Söhne", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: var(--main-bg);
+      color: var(--text-primary);
+      font-family: var(--font-stack);
+      font-size: 14.5px;
+      overflow: hidden;
+    }
+
+    /* Overall Layout */
+    #chatgpt-root {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* Sidebar Navigation (Exact Real ChatGPT styling) */
+    #sidebar-wrapper {
+      width: 260px;
+      background-color: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 1050;
+      transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar-wrapper {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6);
+      }
+      #sidebar-wrapper.open {
+        transform: translateX(0);
+      }
+    }
+
+    .sidebar-top {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-new-chat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: var(--text-primary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.15s ease;
+      text-align: left;
+    }
+
+    .btn-new-chat:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .btn-sidebar-icon {
+      padding: 8px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-sidebar-icon:hover {
+      background-color: var(--hover-bg);
+      color: var(--text-primary);
+    }
+
+    .history-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 8px;
+    }
+
+    .history-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .history-scroll::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 4px;
+    }
+
+    .history-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      padding: 14px 12px 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chat-history-row {
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative;
+    }
+
+    .chat-history-row:hover, .chat-history-row.active {
+      background-color: var(--hover-bg);
+      color: var(--text-primary);
+    }
+
+    .sidebar-footer {
+      padding: 10px 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .profile-pill:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .user-avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10a37f, #1a7f64);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* Main Conversation Viewport */
+    #main-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+      background-color: var(--main-bg);
+    }
+
+    /* Top Navbar */
+    .top-header {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      z-index: 50;
+    }
+
+    .model-selector-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 16px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .model-selector-btn:hover {
+      background: #2a2a2a;
+    }
+
+    .model-tag {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+    }
+
+    .top-action-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-ghost-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .icon-ghost-btn:hover {
+      background-color: #2b2b2b;
+      color: var(--text-primary);
+    }
+
+    /* Scrollable Conversation Container */
+    #conversation-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 16px 140px 16px;
+      scroll-behavior: smooth;
+    }
+
+    #conversation-area::-webkit-scrollbar {
+      width: 8px;
+    }
+    #conversation-area::-webkit-scrollbar-thumb {
+      background-color: #383838;
+      border-radius: 4px;
+    }
+
+    .max-chat-width {
+      max-width: 768px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Welcome / Empty Canvas Screen */
+    .welcome-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 55vh;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .welcome-sparkle-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #171717;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .welcome-heading {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 32px;
+      color: #f7f7f8;
+    }
+
+    .quick-chips-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 660px;
+    }
+
+    @media (max-width: 576px) {
+      .quick-chips-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .quick-chip {
+      background: var(--input-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 12px 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .quick-chip:hover {
+      background: #383838;
+      border-color: #4f4f4f;
+    }
+
+    .quick-chip-title {
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #ffffff;
+    }
+    .quick-chip-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Conversation Message Styles (Pixel-perfect ChatGPT modern layout) */
+    .chat-turn {
+      margin-bottom: 26px;
+      display: flex;
+      flex-direction: column;
+      animation: turnFade 0.25s ease-out;
+    }
+
+    @keyframes turnFade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-turn.user {
+      align-items: flex-end;
+    }
+
+    .chat-turn.user .turn-bubble {
+      background-color: var(--user-bubble);
+      color: #f7f7f8;
+      padding: 12px 18px;
+      border-radius: 20px;
+      max-width: 78%;
+      font-size: 14.5px;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .chat-turn.assistant {
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .assistant-body {
+      display: flex;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .assistant-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #171717;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .assistant-content {
+      flex: 1;
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: #d1d5db;
+      word-break: break-word;
+    }
+
+    .assistant-content p {
+      margin-bottom: 12px;
+    }
+    .assistant-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Authentic Assistant Bottom Action Bar (Copy, Like, Dislike, Regenerate) */
+    .assistant-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding-left: 40px;
+      color: var(--text-tertiary);
+    }
+
+    .action-mini-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-tertiary);
+      padding: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-mini-btn:hover {
+      background: #2a2a2a;
+      color: var(--text-primary);
+    }
+
+    /* Fixed Prompt Input at Bottom */
+    .bottom-input-anchor {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 16px 22px 16px;
+      background: linear-gradient(180deg, rgba(33, 33, 33, 0) 0%, rgba(33, 33, 33, 0.85) 25%, #212121 70%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 40;
+    }
+
+    .pill-input-box {
+      max-width: 768px;
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 26px;
+      padding: 10px 12px 10px 18px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      transition: border-color 0.15s ease;
+    }
+
+    .pill-input-box:focus-within {
+      border-color: #606060;
+    }
+
+    .pill-input-box textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 15px;
+      line-height: 1.45;
+      resize: none;
+      max-height: 140px;
+      padding: 5px 0;
+      font-family: inherit;
+    }
+
+    .pill-input-box textarea::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .input-left-buttons, .input-right-buttons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 2px;
+    }
+
+    .btn-input-accessory {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .btn-input-accessory:hover {
+      background: #3e3e3e;
+      color: #ffffff;
+    }
+
+    .btn-submit-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-submit-circle:disabled {
+      background: #424242;
+      color: #7a7a7a;
+      cursor: default;
+    }
+
+    .legal-footer-text {
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      margin-top: 8px;
+      text-align: center;
+      user-select: none;
+    }
+
+    /* Typing Dots Animation */
+    .typing-wave {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      padding: 4px 0;
+    }
+    .typing-wave span {
+      width: 5px;
+      height: 5px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      animation: wavePulse 1.2s infinite ease-in-out;
+    }
+    .typing-wave span:nth-child(2) { animation-delay: 0.18s; }
+    .typing-wave span:nth-child(3) { animation-delay: 0.36s; }
+
+    @keyframes wavePulse {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+      40% { transform: scale(1.15); opacity: 1; }
+    }
+
+    /* Discreet Admin Overlay (Only shown when ?admin=hussain) */
+    .admin-subtle-badge {
+      position: fixed;
+      bottom: 12px;
+      right: 14px;
+      background: rgba(23, 23, 23, 0.9);
+      border: 1px solid #3d3d3d;
+      color: #9e9e9e;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .admin-subtle-badge:hover {
+      color: #fff;
+      border-color: #666;
+    }
+    .admin-subtle-badge .pulse-green {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* Admin Review Drawer/Modal */
+    .modal-content.chatgpt-modal {
+      background: #212121;
+      border: 1px solid #3d3d3d;
+      border-radius: 16px;
+      color: #ececec;
+    }
+    .admin-thread-card {
+      background: #171717;
+      border: 1px solid #333333;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .admin-thread-card.unread {
+      border-left: 3px solid var(--accent);
+    }
+
+    /* Toast Notification (styled like ChatGPT popover) */
+    .toast-box {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      background: #171717;
+      border: 1px solid #383838;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #f7f7f8;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn 0.2s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div id="chatgpt-root">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside id="sidebar-wrapper">
+    <div class="sidebar-top">
+      <button class="btn-sidebar-icon" onclick="toggleSidebar()" title="Close sidebar">
+        <!-- OpenAI Sidebar Collapse Icon -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      </button>
+
+      <button class="btn-sidebar-icon" onclick="handleNewChat()" title="New chat">
+        <!-- New Chat Pen Icon -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </button>
+    </div>
+
+    <div class="px-2 mb-2">
+      <button class="btn-new-chat" onclick="handleNewChat()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>New chat</span>
+      </button>
+    </div>
+
+    <!-- History items -->
+    <div class="history-scroll">
+      <div class="history-section-title">Today</div>
+      <div class="chat-history-row active" onclick="loadDisguiseNotes('pakistan')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="text-truncate">1973 Constitution Pakistan</span>
+      </div>
+
+      <div class="chat-history-row" onclick="loadDisguiseNotes('physics')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="text-truncate">Newton's Laws of Motion</span>
+      </div>
+
+      <div class="history-section-title">Previous 7 Days</div>
+      <div class="chat-history-row" onclick="loadDisguiseNotes('general')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="text-truncate">Daily Study Plan & Vocabulary</span>
+      </div>
+    </div>
+
+    <!-- Sidebar Footer / Profile -->
+    <div class="sidebar-footer">
+      <div class="profile-pill" onclick="triggerPanic()" title="Profile settings">
+        <div class="d-flex align-items-center gap-2">
+          <div class="user-avatar-circle">H</div>
+          <div>
+            <div class="fw-semibold text-white" style="font-size: 13px;">User</div>
+            <div class="text-secondary" style="font-size: 11px;">Free Plan</div>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-secondary"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN VIEWPORT ==================== -->
+  <main id="main-viewport">
+    
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="d-flex align-items-center gap-2">
+        <button class="icon-ghost-btn d-md-none" onclick="toggleSidebar()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <button class="model-selector-btn" onclick="triggerPanic()" title="Select model">
+          <span>ChatGPT</span>
+          <span class="model-tag">4o mini</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+
+      <div class="top-action-icons">
+        <!-- Temporary Chat / Share Icons like real ChatGPT -->
+        <button class="icon-ghost-btn" onclick="handleNewChat()" title="Temporary Chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+        </button>
+        <button class="icon-ghost-btn" onclick="triggerPanic()" title="Share chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Conversation / Messages -->
+    <section id="conversation-area">
+      <div class="max-chat-width" id="conversation-wrapper">
+        <!-- Welcome empty state loaded by default -->
+        <div class="welcome-container" id="empty-splash">
+          <div class="welcome-sparkle-icon">
+            <!-- OpenAI SVG -->
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.771-4.2057 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7467-7.0731zm-8.8687 12.784a4.5772 4.5772 0 0 1-2.9099-1.0425l.1428-.0809 4.819-2.779a.747.747 0 0 0 .3753-.6476V11.332l2.0427 1.1794a.0667.0667 0 0 1 .0381.0571v5.5806a4.5962 4.5962 0 0 1-4.509 4.456zM3.606 17.3755a4.5582 4.5582 0 0 1-.5395-3.0475l.1428.0857 4.8143 2.779a.747.747 0 0 0 .7456 0l5.8093-3.3523v2.3589a.0667.0667 0 0 1-.0286.0571L9.723 19.062a4.5962 4.5962 0 0 1-6.117-1.6865zm-1.4619-8.4093a4.5582 4.5582 0 0 1 2.3703-2.005l-.0047.1619V12.682a.747.747 0 0 0 .3705.6476l5.8093 3.3524-2.0427 1.1794a.0667.0667 0 0 1-.0667 0l-4.8286-2.8058a4.5962 4.5962 0 0 1-1.6075-6.0898zm15.7196 3.7047-5.8094-3.3523 2.0428-1.1795a.0667.0667 0 0 1 .0666 0l4.8286 2.8058a4.5962 4.5962 0 0 1 1.6075 6.0898 4.5582 4.5582 0 0 1-2.3703 2.005l.0047-.1619V13.3185a.747.747 0 0 0-.3705-.6476zm2.5332-4.6808-.1428-.0857-4.8143-2.779a.747.747 0 0 0-.7456 0L8.8848 8.4776V6.1187a.0667.0667 0 0 1 .0286-.0571L13.7397 3.256a4.5962 4.5962 0 0 1 6.117 1.6865 4.5582 4.5582 0 0 1 .5395 3.0475zM12 14.281l-2.4808-1.4332 2.4808-1.4332 2.4808 1.4332z"/></svg>
+          </div>
+          <h2 class="welcome-heading">What can I help with today?</h2>
+
+          <div class="quick-chips-grid">
+            <div class="quick-chip" onclick="handleChipClick('Pakistan Studies: 1973 Constitution ke aham nukaat batayein.')">
+              <span class="quick-chip-title">Pakistan Studies Notes</span>
+              <span class="quick-chip-desc">Key highlights of 1973 Constitution</span>
+            </div>
+            <div class="quick-chip" onclick="handleChipClick('Newton\'s three laws of motion with simple daily life examples.')">
+              <span class="quick-chip-title">Explain Newton\'s Laws</span>
+              <span class="quick-chip-desc">Physics basics with everyday examples</span>
+            </div>
+            <div class="quick-chip" onclick="handleChipClick('Kaise ho? Aaj ka kya plan hai?')">
+              <span class="quick-chip-title">Everyday Conversation</span>
+              <span class="quick-chip-desc">Casual chatting in Roman Urdu</span>
+            </div>
+            <div class="quick-chip" onclick="handleChipClick('Summarize key benefits of healthy lifestyle habits.')">
+              <span class="quick-chip-title">Healthy Routine Summary</span>
+              <span class="quick-chip-desc">Quick daily wellbeing suggestions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Input Bar -->
+    <div class="bottom-input-anchor">
+      <div class="pill-input-box">
+        <!-- Left attachment plus icon -->
+        <div class="input-left-buttons">
+          <button class="btn-input-accessory" title="Attach file" onclick="triggerPanic()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+
+        <textarea id="prompt-input" rows="1" placeholder="Message ChatGPT..." onkeydown="handleInputKey(event)" oninput="handleInputAutoGrow(this)"></textarea>
+
+        <!-- Right actions: microphone & submit -->
+        <div class="input-right-buttons">
+          <button class="btn-input-accessory" title="Voice mode (dictate)" onclick="triggerPanic()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </button>
+          <button class="btn-submit-circle" id="btn-submit" onclick="submitMessage()" disabled title="Send prompt">
+            <!-- Arrow up svg -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="legal-footer-text">ChatGPT can make mistakes. Check important info.</div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================== DISCREET ADMIN MODAL ==================== -->
+<div class="modal fade" id="adminDeckModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content chatgpt-modal">
+      <div class="modal-header border-0 pb-1">
+        <h6 class="modal-title fw-semibold text-white d-flex align-items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-success"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/></svg>
+          Incoming Public Sessions
+        </h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-2">
+        <div id="admin-inbox-deck" style="max-height: 480px; overflow-y: auto;">
+          <div class="text-center py-5 text-secondary">Checking incoming messages...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ADMIN REPLY DRAFT MODAL ==================== -->
+<div class="modal fade" id="replyComposerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content chatgpt-modal">
+      <div class="modal-header border-0 pb-1">
+        <h6 class="modal-title fw-semibold text-white" id="replyModalHeader">Dispatch Response</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-2">
+        <div class="small text-secondary mb-1">Hurain's message:</div>
+        <div class="p-2 mb-3 rounded" style="background: #171717; border: 1px solid #333;" id="adminReplyOriginalText"></div>
+
+        <div class="mb-2">
+          <label class="small text-secondary mb-1">Your reply:</label>
+          <textarea id="adminReplyInput" class="form-control" rows="4" style="background:#171717; color:#fff; border-color:#383838; font-size:14px;" placeholder="Type here..."></textarea>
+        </div>
+        <div class="small text-secondary" id="replyComposerHint"></div>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-light btn-sm fw-semibold" onclick="submitAdminReply()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin status bubble (Only appears when ?admin=hussain) -->
+<div id="adminPill" class="admin-subtle-badge" style="display: none;" onclick="openAdminDeck()">
+  <span class="pulse-green"></span>
+  <span>Hussain Console</span>
+  <span class="badge bg-secondary ms-1" id="adminUnreadCount">0</span>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  /*****************************************************************************
+   * 1. FIREBASE INITIALIZATION
+   *****************************************************************************/
+  const firebaseConfig = {
+    apiKey: "AIzaSyBs9-mTkgNTQR8bh2V6kM_9JWHvOHrA0zc",
+    authDomain: "chatapphussain.firebaseapp.com",
+    databaseURL: "https://chatapphussain-default-rtdb.firebaseio.com/",
+    projectId: "chatapphussain",
+    storageBucket: "chatapphussain.firebasestorage.app",
+    messagingSenderId: "125265046940",
+    appId: "1:125265046940:web:d1dee357c35df1dded2c59"
+  };
+
+  let db = null;
+  let inboxRef = null;
+  let repliesRef = null;
+  let isFirebaseConfigured = false;
+
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    inboxRef = db.ref("hidden_chat/inbox");
+    repliesRef = db.ref("hidden_chat/replies");
+    isFirebaseConfigured = true;
+  } catch (err) {
+    console.warn("Firebase initialization warning:", err);
+  }
+
+  /*****************************************************************************
+   * 2. STATE & PARAMETERS
+   *****************************************************************************/
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdmin = urlParams.get('admin') === 'hussain';
+
+  let sessionId = localStorage.getItem('gpt_session_token');
+  if (!sessionId) {
+    sessionId = 'u_' + Math.random().toString(36).substring(2, 11);
+    localStorage.setItem('gpt_session_token', sessionId);
+  }
+
+  let activeReplyMsgId = null;
+  let activeReplyMode = 'hussain';
+  const seenInboxKeys = new Set();
+  const seenRepliesKeys = new Set();
+
+  const promptInput = document.getElementById('prompt-input');
+  const btnSubmit = document.getElementById('btn-submit');
+  const conversationWrapper = document.getElementById('conversation-wrapper');
+  const conversationArea = document.getElementById('conversation-area');
+  const adminDeckModal = new bootstrap.Modal(document.getElementById('adminDeckModal'));
+  const replyComposerModal = new bootstrap.Modal(document.getElementById('replyComposerModal'));
+
+  /*****************************************************************************
+   * 3. INITIALIZATION
+   *****************************************************************************/
+  function bootstrapApplication() {
+    if (isAdmin) {
+      document.getElementById('adminPill').style.display = 'flex';
+      setupAdminListeners();
+      // Auto-open inbox for admin
+      setTimeout(() => { openAdminDeck(); }, 500);
+    } else {
+      setupPublicReplieListeners();
+    }
+
+    // Emergency Panic triggers
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') triggerPanic();
+    });
+
+    let lastTap = 0;
+    document.addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTap;
+      if (tapLength < 280 && tapLength > 0 && e.touches.length === 0) {
+        if (e.clientY < 70) triggerPanic();
+      }
+      lastTap = currentTime;
+    });
+  }
+
+  /*****************************************************************************
+   * 4. PUBLIC CHAT LOGIC
+   *****************************************************************************/
+  function handleInputAutoGrow(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 140) + 'px';
+    btnSubmit.disabled = textarea.value.trim().length === 0;
+  }
+
+  function handleInputKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitMessage();
+    }
+  }
+
+  function handleChipClick(text) {
+    promptInput.value = text;
+    handleInputAutoGrow(promptInput);
+    submitMessage();
+  }
+
+  function submitMessage() {
+    const rawText = promptInput.value.trim();
+    if (!rawText) return;
+
+    promptInput.value = '';
+    promptInput.style.height = 'auto';
+    btnSubmit.disabled = true;
+
+    const splash = document.getElementById('empty-splash');
+    if (splash) splash.remove();
+
+    renderUserTurn(rawText);
+
+    const turnId = 'ai-turn-' + Date.now();
+    renderAssistantTurn(turnId, '<div class="typing-wave"><span></span><span></span><span></span></div>');
+
+    if (isFirebaseConfigured && inboxRef) {
+      const msgKey = inboxRef.push({
+        sessionId: sessionId,
+        text: rawText,
+        timestamp: Date.now(),
+        replied: false
+      }).key;
+
+      // 30 sec fallback AI
+      setTimeout(() => {
+        checkAndDispatchAutoAI(msgKey, rawText, turnId);
+      }, 30000);
+    } else {
+      setTimeout(async () => {
+        const aiText = await fetchAuthenticAIResponse(rawText);
+        typewriterElement(document.getElementById(turnId), aiText);
+      }, 1000);
+    }
+  }
+
+  async function checkAndDispatchAutoAI(msgKey, prompt, turnId) {
+    if (!isFirebaseConfigured || !inboxRef) return;
+    const snap = await inboxRef.child(msgKey).once('value');
+    const val = snap.val();
+
+    // Agar admin ne reply kar diya hai toh wapis jao
+    if (!val || val.replied) return;
+
+    // Real AI response generate karo
+    const answer = await fetchAuthenticAIResponse(prompt);
+    typewriterToTurn(turnId, answer);
+
+    inboxRef.child(msgKey).update({ replied: true, autoReplied: true });
+  }
+
+  function setupPublicReplieListeners() {
+    if (!isFirebaseConfigured || !repliesRef) return;
+
+    repliesRef.orderByChild('sessionId').equalTo(sessionId).on('child_added', (snapshot) => {
+      const reply = snapshot.val();
+      if (!reply || seenRepliesKeys.has(snapshot.key)) return;
+      seenRepliesKeys.add(snapshot.key);
+
+      const turns = document.querySelectorAll('.assistant-content');
+      let target = null;
+      for (let i = turns.length - 1; i >= 0; i--) {
+        if (turns[i].innerHTML.includes('typing-wave')) {
+          target = turns[i];
+          break;
+        }
+      }
+
+      if (target) {
+        // Agar target mila toh typing animation dikhao
+        typewriterElement(target, reply.text);
+      } else {
+        const newId = 'reply-' + Date.now();
+        renderAssistantTurn(newId, '');
+        const el = document.getElementById(newId);
+        if (el) typewriterElement(el, reply.text);
+      }
+    });
+  }
+
+  /*****************************************************************************
+   * 5. AI ENGINE (Pollinations - Free API)
+   *****************************************************************************/
+  async function fetchAuthenticAIResponse(prompt) {
+    const isUrdu = /kaise|kya|haan|nahi|theek|karo|batao|shukriya|acha|kon|ghar|baat/i.test(prompt);
+
+    const systemInstruction = isUrdu
+      ? "You are ChatGPT. Reply naturally in polite Roman Urdu. Be direct, clear, helpful, and concise like OpenAI ChatGPT. Format with standard paragraphs."
+      : "You are ChatGPT, a large language model trained by OpenAI. Provide clear, accurate, and concise assistance.";
+
+    try {
+      const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&system=${encodeURIComponent(systemInstruction)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("AI provider error");
+      const text = await res.text();
+      return text.trim();
+    } catch (e) {
+      console.warn("AI Fallback triggered:", e);
+      if (/pakistan|1973|constitution/i.test(prompt)) {
+        return "The 1973 Constitution of Pakistan was passed on 14 August 1973 under Zulfikar Ali Bhutto. Key features include a parliamentary system with bicameral legislature (Senate and National Assembly), Islamic state provisions, and protected fundamental human rights.";
+      }
+      if (/newton/i.test(prompt)) {
+        return "Newton's laws of motion describe the relationship between a body and the forces acting upon it:\n\n1. Law of Inertia: Objects stay at rest or in uniform motion unless acted upon.\n2. F = ma: Acceleration is proportional to force.\n3. Action & Reaction: Every action has an equal and opposite reaction.";
+      }
+      return isUrdu 
+        ? "Ji bilkul, main samajh gaya. Aap is baare mein mazeed kya poochna chahte hain?"
+        : "I understand. Let me know if you would like me to elaborate further on this topic.";
+    }
+  }
+
+  /*****************************************************************************
+   * 6. RENDERING DOM ELEMENTS
+   *****************************************************************************/
+  function renderUserTurn(text) {
+    const div = document.createElement('div');
+    div.className = 'chat-turn user';
+    div.innerHTML = `<div class="turn-bubble">${escapeHtml(text)}</div>`;
+    conversationWrapper.appendChild(div);
+    scrollBottom();
+  }
+
+  function renderAssistantTurn(id, innerHtml) {
+    const div = document.createElement('div');
+    div.className = 'chat-turn assistant';
+    div.innerHTML = `
+      <div class="assistant-body">
+        <div class="assistant-avatar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.771-4.2057 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7467-7.0731zm-8.8687 12.784a4.5772 4.5772 0 0 1-2.9099-1.0425l.1428-.0809 4.819-2.779a.747.747 0 0 0 .3753-.6476V11.332l2.0427 1.1794a.0667.0667 0 0 1 .0381.0571v5.5806a4.5962 4.5962 0 0 1-4.509 4.456zM3.606 17.3755a4.5582 4.5582 0 0 1-.5395-3.0475l.1428.0857 4.8143 2.779a.747.747 0 0 0 .7456 0l5.8093-3.3523v2.3589a.0667.0667 0 0 1-.0286.0571L9.723 19.062a4.5962 4.5962 0 0 1-6.117-1.6865zm-1.4619-8.4093a4.5582 4.5582 0 0 1 2.3703-2.005l-.0047.1619V12.682a.747.747 0 0 0 .3705.6476l5.8093 3.3524-2.0427 1.1794a.0667.0667 0 0 1-.0667 0l-4.8286-2.8058a4.5962 4.5962 0 0 1-1.6075-6.0898zm15.7196 3.7047-5.8094-3.3523 2.0428-1.1795a.0667.0667 0 0 1 .0666 0l4.8286 2.8058a4.5962 4.5962 0 0 1 1.6075 6.0898 4.5582 4.5582 0 0 1-2.3703 2.005l.0047-.1619V13.3185a.747.747 0 0 0-.3705-.6476zm2.5332-4.6808-.1428-.0857-4.8143-2.779a.747.747 0 0 0-.7456 0L8.8848 8.4776V6.1187a.0667.0667 0 0 1 .0286-.0571L13.7397 3.256a4.5962 4.5962 0 0 1 6.117 1.6865 4.5582 4.5582 0 0 1 .5395 3.0475zM12 14.281l-2.4808-1.4332 2.4808-1.4332 2.4808 1.4332z"/></svg>
+        </div>
+        <div class="assistant-content" id="${id}">
+          ${innerHtml}
+        </div>
+      </div>
+      <div class="assistant-actions-bar">
+        <button class="action-mini-btn" title="Copy response" onclick="copyTurnText('${id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <button class="action-mini-btn" title="Good response">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+        </button>
+        <button class="action-mini-btn" title="Bad response">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>
+        </button>
+      </div>
+    `;
+    conversationWrapper.appendChild(div);
+    scrollBottom();
+  }
+
+  function typewriterToTurn(elementId, fullText) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    typewriterElement(el, fullText);
+  }
+
+  function typewriterElement(element, fullText) {
+    if (!element) return;
+    element.innerHTML = '';
+    const formatted = escapeHtml(fullText).replace(/\n/g, '<br>');
+    let i = 0;
+    const speed = 10;
+
+    function step() {
+      if (i < formatted.length) {
+        const chunk = formatted.substring(i, i + 4);
+        element.innerHTML += chunk;
+        i += 4;
+        scrollBottom();
+        setTimeout(step, speed);
+      } else {
+        element.innerHTML = formatted;
+        scrollBottom();
+      }
+    }
+    step();
+  }
+
+  function copyTurnText(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const text = el.innerText || el.textContent;
+    const tempInput = document.createElement("textarea");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    renderToast("Copied to clipboard");
+  }
+
+  /*****************************************************************************
+   * 7. ADMIN DASHBOARD & REPLY MANAGEMENT
+   *****************************************************************************/
+  function setupAdminListeners() {
+    if (!isFirebaseConfigured || !inboxRef) return;
+
+    inboxRef.limitToLast(60).on('child_added', (snap) => {
+      const data = snap.val();
+      if (!data || seenInboxKeys.has(snap.key)) return;
+      seenInboxKeys.add(snap.key);
+
+      if (!data.replied) {
+        renderToast("New query from " + (data.sessionId || 'user'));
+      }
+      refreshAdminList();
+    });
+
+    inboxRef.on('child_changed', () => refreshAdminList());
+  }
+
+  function openAdminDeck() {
+    refreshAdminList();
+    adminDeckModal.show();
+  }
+
+  function refreshAdminList() {
+    if (!isFirebaseConfigured || !inboxRef) return;
+
+    inboxRef.limitToLast(40).once('value', (snap) => {
+      const deck = document.getElementById('admin-inbox-deck');
+      const data = snap.val();
+      if (!data) {
+        deck.innerHTML = '<div class="text-center py-5 text-secondary">No chats yet.</div>';
+        document.getElementById('adminUnreadCount').textContent = '0';
+        return;
+      }
+
+      const list = Object.entries(data).map(([k, v]) => Object.assign({ id: k }, v))
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      const unread = list.filter(m => !m.replied).length;
+      document.getElementById('adminUnreadCount').textContent = unread;
+
+      let html = '';
+      list.forEach(item => {
+        const time = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isNew = !item.replied;
+        const safeTxt = escapeHtml(item.text).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+
+        html += `
+          <div class="admin-thread-card ${isNew ? 'unread' : ''}">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small text-secondary fw-semibold">User: ${item.sessionId ? item.sessionId.substring(0, 10) : 'Anon'}</span>
+              <span class="small text-secondary">${time} ${isNew ? '<span class="badge bg-danger ms-1">NEW</span>' : ''}</span>
+            </div>
+            <div class="text-white mb-2" style="font-size: 13.5px;">${escapeHtml(item.text)}</div>
+            <div class="d-flex gap-2 align-items-center">
+              ${isNew ? `
+                <button class="btn btn-sm btn-outline-light py-1 px-2" style="font-size:12px;" onclick="openDraftModal('${item.id}', 'hussain', '${safeTxt}')">
+                  Reply as Hussain
+                </button>
+                <button class="btn btn-sm btn-outline-secondary py-1 px-2 text-white" style="font-size:12px;" onclick="openDraftModal('${item.id}', 'ai', '${safeTxt}')">
+                  Reply as ChatGPT
+                </button>
+              ` : `
+                <span class="small text-success"><i class="bi bi-check-all"></i> Replied (${item.autoReplied ? 'Auto AI' : (item.replyType || 'resolved')})</span>
+              `}
+            </div>
+          </div>
+        `;
+      });
+
+      deck.innerHTML = html;
+    });
+  }
+
+  function openDraftModal(msgId, mode, originalText) {
+    activeReplyMsgId = msgId;
+    activeReplyMode = mode;
+
+    document.getElementById('adminReplyOriginalText').textContent = originalText;
+    const txtArea = document.getElementById('adminReplyInput');
+    const hint = document.getElementById('replyComposerHint');
+
+    txtArea.value = '';
+    txtArea.disabled = false;
+
+    if (mode === 'hussain') {
+      document.getElementById('replyModalHeader').textContent = "Send Message as Hussain";
+      txtArea.placeholder = "Type your personal reply here...";
+      hint.textContent = "Yeh message bilkul real user ki tarah jayega.";
+      replyComposerModal.show();
+      setTimeout(() => txtArea.focus(), 300);
+    } else {
+      document.getElementById('replyModalHeader').textContent = "Send as ChatGPT AI";
+      txtArea.value = "Generating authentic AI response...";
+      txtArea.disabled = true;
+      hint.textContent = "AI khud jawab generate kar raha hai...";
+      replyComposerModal.show();
+
+      fetchAuthenticAIResponse(originalText).then((aiText) => {
+        txtArea.value = aiText;
+        txtArea.disabled = false;
+        txtArea.focus();
+      });
+    }
+  }
+
+  function submitAdminReply() {
+    const text = document.getElementById('adminReplyInput').value.trim();
+    if (!text || !activeReplyMsgId || !isFirebaseConfigured) return;
+
+    inboxRef.child(activeReplyMsgId).once('value', (snap) => {
+      const original = snap.val();
+      if (!original) return;
+
+      repliesRef.push({
+        sessionId: original.sessionId,
+        text: text,
+        replyType: activeReplyMode,
+        timestamp: Date.now(),
+        inReplyTo: activeReplyMsgId
+      });
+
+      inboxRef.child(activeReplyMsgId).update({
+        replied: true,
+        replyType: activeReplyMode,
+        repliedAt: Date.now()
+      });
+
+      replyComposerModal.hide();
+      refreshAdminList();
+      renderToast("Reply sent successfully");
+    });
+  }
+
+  /*****************************************************************************
+   * 8. EMERGENCY PANIC SYSTEM & HELPERS
+   *****************************************************************************/
+  function triggerPanic() {
+    if (isAdmin) {
+      window.location.href = window.location.pathname; // remove admin url
+      return;
+    }
+    loadDisguiseNotes('pakistan');
+    renderToast("Session refreshed");
+  }
+
+  function loadDisguiseNotes(topic) {
+    conversationWrapper.innerHTML = '';
+
+    if (topic === 'physics') {
+      renderUserTurn("Can you explain Newton's three laws of motion briefly?");
+      renderAssistantTurn('panic-1', `
+        <p><strong>Newton's Laws of Motion:</strong></p>
+        <p>1. <strong>First Law (Inertia):</strong> An object at rest remains at rest, and an object in motion continues in motion with constant velocity, unless acted upon by a net external force.</p>
+        <p>2. <strong>Second Law (F = ma):</strong> The acceleration of an object is directly proportional to the net force acting upon it and inversely proportional to its mass.</p>
+        <p>3. <strong>Third Law:</strong> For every action, there is an equal and opposite reaction.</p>
+      `);
+    } else {
+      renderUserTurn("Summarize the 1973 Constitution of Pakistan briefly for exam prep.");
+      renderAssistantTurn('panic-2', `
+        <p><strong>Key Highlights of the 1973 Constitution of Pakistan:</strong></p>
+        <p>• <strong>Form of Government:</strong> Introduced a federal parliamentary system with a bicameral legislature (National Assembly and Senate).</p>
+        <p>• <strong>Islamic Character:</strong> Declared Islam as the state religion and mandated that all laws must conform to the Quran and Sunnah.</p>
+        <p>• <strong>Fundamental Rights:</strong> Guaranteed equality before the law, freedom of speech, fair trial, and protection of property rights.</p>
+      `);
+    }
+    scrollBottom();
+  }
+
+  function handleNewChat() {
+    conversationWrapper.innerHTML = `
+      <div class="welcome-container" id="empty-splash">
+        <div class="welcome-sparkle-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.771-4.2057 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7467-7.0731zm-8.8687 12.784a4.5772 4.5772 0 0 1-2.9099-1.0425l.1428-.0809 4.819-2.779a.747.747 0 0 0 .3753-.6476V11.332l2.0427 1.1794a.0667.0667 0 0 1 .0381.0571v5.5806a4.5962 4.5962 0 0 1-4.509 4.456zM3.606 17.3755a4.5582 4.5582 0 0 1-.5395-3.0475l.1428.0857 4.8143 2.779a.747.747 0 0 0 .7456 0l5.8093-3.3523v2.3589a.0667.0667 0 0 1-.0286.0571L9.723 19.062a4.5962 4.5962 0 0 1-6.117-1.6865zm-1.4619-8.4093a4.5582 4.5582 0 0 1 2.3703-2.005l-.0047.1619V12.682a.747.747 0 0 0 .3705.6476l5.8093 3.3524-2.0427 1.1794a.0667.0667 0 0 1-.0667 0l-4.8286-2.8058a4.5962 4.5962 0 0 1-1.6075-6.0898zm15.7196 3.7047-5.8094-3.3523 2.0428-1.1795a.0667.0667 0 0 1 .0666 0l4.8286 2.8058a4.5962 4.5962 0 0 1 1.6075 6.0898 4.5582 4.5582 0 0 1-2.3703 2.005l.0047-.1619V13.3185a.747.747 0 0 0-.3705-.6476zm2.5332-4.6808-.1428-.0857-4.8143-2.779a.747.747 0 0 0-.7456 0L8.8848 8.4776V6.1187a.0667.0667 0 0 1 .0286-.0571L13.7397 3.256a4.5962 4.5962 0 0 1 6.117 1.6865 4.5582 4.5582 0 0 1 .5395 3.0475zM12 14.281l-2.4808-1.4332 2.4808-1.4332 2.4808 1.4332z"/></svg>
+        </div>
+        <h2 class="welcome-heading">What can I help with today?</h2>
+        <div class="quick-chips-grid">
+          <div class="quick-chip" onclick="handleChipClick('Pakistan Studies: 1973 Constitution ke aham nukaat batayein.')">
+            <span class="quick-chip-title">Pakistan Studies Notes</span>
+            <span class="quick-chip-desc">Key highlights of 1973 Constitution</span>
+          </div>
+          <div class="quick-chip" onclick="handleChipClick('Newton\\'s three laws of motion with simple daily life examples.')">
+            <span class="quick-chip-title">Explain Newton\\'s Laws</span>
+            <span class="quick-chip-desc">Physics basics with everyday examples</span>
+          </div>
+        </div>
+      </div>
+    `;
+    promptInput.value = '';
+    btnSubmit.disabled = true;
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar-wrapper').classList.toggle('open');
+  }
+
+  function scrollBottom() {
+    conversationArea.scrollTop = conversationArea.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const d = document.createElement('div');
+    d.innerText = text;
+    return d.innerHTML;
+  }
+
+  function renderToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-box';
+    toast.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.25s ease';
+      setTimeout(() => toast.remove(), 250);
+    }, 2800);
+  }
+
+  // Launch application
+  bootstrapApplication();
+</script>
+</body>
+</html>

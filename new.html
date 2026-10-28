@@ -1135,13 +1135,25 @@
         /* ============================================================
            ADMIN VIEW
            ============================================================ */
-        function showAdminInbox() {
+               function showAdminInbox() {
             messagesContainer.innerHTML =
                 '<div class="p-3">' +
                 '<div class="d-flex align-items-center justify-content-between mb-3">' +
                 '<h5 class="mb-0 fw-semibold"><i class="bi bi-inbox-fill text-danger"></i> Inbox</h5>' +
                 '<span class="badge bg-secondary" id="inbox-count">0</span>' +
                 '</div>' +
+                
+                // YEH NAYA SECTION ADD KAREIN (Online Users)
+                '<div class="mb-3 p-2 rounded" style="background: #171717; border: 1px solid #10a37f;">' +
+                '<div class="small text-success fw-bold mb-1" style="font-size: 11px;">' +
+                '<i class="bi bi-broadcast"></i> LIVE ONLINE USERS' +
+                '</div>' +
+                '<div id="online-users-list" class="text-white" style="font-size: 13px;">' +
+                'Checking...' +
+                '</div>' +
+                '</div>' +
+                // NAYA SECTION END
+
                 '<div class="small text-muted mb-3"><i class="bi bi-info-circle"></i> Messages from public users. Choose how to reply.</div>' +
                 '<div id="admin-inbox-list">' +
                 '<div class="admin-empty"><i class="bi bi-inbox"></i><p>No messages yet.<br><span class="small">Wait for someone to send a message...</span></p></div>' +
@@ -1463,7 +1475,73 @@
             div.innerText = string;
             return div.innerHTML;
         }
+        /* ============================================================
+           LIVE USER TRACKING & ONLINE LIST (NEW)
+           ============================================================ */
+        
+        const presenceRef = db ? db.ref("hidden_chat/online_users") : null;
 
+        // Jab koi website khole to track karein
+        function trackUserPresence() {
+            if (!isFirebaseConfigured || !presenceRef) return;
+            
+            // Har tab ke liye unique ID banayein
+            if (!window.myTabId) {
+                window.myTabId = sessionId + '_' + Math.random().toString(36).substring(2, 5);
+            }
+            
+            const userRef = presenceRef.child(window.myTabId);
+            
+            userRef.set({
+                timestamp: Date.now(),
+                device: /Mobile|Android|iP(hone|ad)/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'
+            });
+
+            userRef.onDisconnect().remove();
+        }
+
+        // Online Users List ko update karna (LIVE)
+        function updateOnlineUsersList() {
+            if (!isFirebaseConfigured || !presenceRef) return;
+            
+            presenceRef.on('value', (snap) => {
+                const listDiv = document.getElementById('online-users-list');
+                if (!listDiv) return;
+                
+                const data = snap.val();
+                if (!data) {
+                    listDiv.innerHTML = '<span class="text-secondary">Koi online nahi hai.</span>';
+                    return;
+                }
+                
+                const users = Object.keys(data);
+                let html = '';
+                let count = 0;
+                
+                users.forEach(id => {
+                    count++;
+                    const device = data[id].device || 'Unknown';
+                    const time = new Date(data[id].timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const shortId = id.substring(0, 10).replace('_', ' '); 
+                    
+                    html += `<div class="d-flex justify-content-between align-items-center mb-1 pb-1" style="border-bottom: 1px solid #333;">
+                        <span>👤 User: ${shortId}...</span>
+                        <span class="badge bg-secondary" style="font-size: 10px;">${device} · ${time}</span>
+                    </div>`;
+                });
+                
+                listDiv.innerHTML = html + `<div class="text-success mt-1 fw-bold">Total Online: ${count}</div>`;
+            });
+        }
+
+        // Shuru mein sab kuch set karein
+        if (isAdmin) {
+            // Admin ko sirf list dikhani hai
+            setTimeout(() => { updateOnlineUsersList(); }, 1000);
+        } else {
+            // Normal user ko track karna hai
+            trackUserPresence();
+        }
         /* ============================================================
            BOOT
            ============================================================ */

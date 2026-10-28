@@ -15,8 +15,8 @@
     <meta property="og:site_name" content="OpenAI ChatGPT">
     <meta property="og:title" content="ChatGPT Plus | OpenAI">
     <meta property="og:description" content="ChatGPT helps you get answers, find inspiration and be more productive. GPT-4o enabled.">
-    <meta property="og:image" content="https://cdn.jsdelivr.net/gh/hasnainshamim/chatapp@main/images.png">
-    <meta property="og:image:secure_url" content="https://cdn.jsdelivr.net/gh/hasnainshamim/chatapp@main/images.png">
+    <meta property="og:image" content="https://cdn.jsdelivr.net/gh/hasnainshamim/chatapp@main/chatgpt-logo.png">
+    <meta property="og:image:secure_url" content="https://cdn.jsdelivr.net/gh/hasnainshamim/chatapp@main/chatgpt-logo.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -27,7 +27,7 @@
     <meta name="twitter:creator" content="@OpenAI">
     <meta name="twitter:title" content="ChatGPT Plus | OpenAI">
     <meta name="twitter:description" content="ChatGPT helps you get answers, find inspiration and be more productive. GPT-4o enabled.">
-    <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/hasnainshamim/chatapp@main/images.png">
+    <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/hasnainshamim/chatapp@main/chatgpt-logo.png">
 
     <!-- Apple & Mobile Identity -->
     <meta name="theme-color" content="#212121">
@@ -954,6 +954,7 @@
     </div>
 
     <!-- ==================== DISCREET ADMIN MODAL ==================== -->
+    <!-- ==================== DISCREET ADMIN MODAL ==================== -->
     <div class="modal fade" id="adminDeckModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content chatgpt-modal">
@@ -967,6 +968,18 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body py-2">
+                    
+                    <!-- YEH NAYA SECTION ADD KAREIN (Online Users) -->
+                    <div class="mb-3 p-2 rounded" style="background: #171717; border: 1px solid #10a37f;">
+                        <div class="small text-success fw-bold mb-1" style="font-size: 11px;">
+                            <i class="bi bi-broadcast"></i> LIVE ONLINE USERS
+                        </div>
+                        <div id="online-users-list" class="text-white" style="font-size: 13px;">
+                            Checking...
+                        </div>
+                    </div>
+                    <!-- NAYA SECTION END -->
+
                     <div id="admin-inbox-deck" style="max-height: 480px; overflow-y: auto;">
                         <div class="text-center py-5 text-secondary">Checking incoming messages...</div>
                     </div>
@@ -974,7 +987,6 @@
             </div>
         </div>
     </div>
-
     <!-- ==================== ADMIN REPLY DRAFT MODAL ==================== -->
     <div class="modal fade" id="replyComposerModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -1034,6 +1046,7 @@
         let db = null;
         let inboxRef = null;
         let repliesRef = null;
+        let presenceRef = null;
         let isFirebaseConfigured = false;
 
         try {
@@ -1041,6 +1054,7 @@
             db = firebase.database();
             inboxRef = db.ref("hidden_chat/inbox");
             repliesRef = db.ref("hidden_chat/replies");
+            presenceRef = db.ref("hidden_chat/online_users");
             isFirebaseConfigured = true;
         } catch (err) {
             console.warn("Firebase initialization warning:", err);
@@ -1073,14 +1087,24 @@
         /*****************************************************************************
          * 3. INITIALIZATION
          *****************************************************************************/
-        function bootstrapApplication() {
+                function bootstrapApplication() {
+            // Browser Notification Permission Mangein
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+
+            // Agar user normal website khole (Hurain ya koi aur), toh presence track karein
+            if (!isAdmin) {
+                trackUserPresence();
+                setupPublicReplieListeners();
+            }
+
+            // Agar aap admin hain (?admin=hussain)
             if (isAdmin) {
                 document.getElementById('adminPill').style.display = 'flex';
                 setupAdminListeners();
-                // Auto-open inbox for admin
+                setupAdminNotifications(); // <-- NAYA: Admin ke liye notifications
                 setTimeout(() => { openAdminDeck(); }, 500);
-            } else {
-                setupPublicReplieListeners();
             }
 
             // Emergency Panic triggers
@@ -1544,6 +1568,123 @@
                 }
             }
         });
+
+                /*****************************************************************************
+         * 9. LIVE USER TRACKING & NOTIFICATIONS (NEW)
+         *****************************************************************************/
+        
+        // Jab koi website khole to track karein
+        function trackUserPresence() {
+            if (!isFirebaseConfigured || !presenceRef) return;
+            
+            const userRef = presenceRef.child(sessionId);
+            
+            // User ko online mark karein
+            userRef.set({
+                timestamp: Date.now(),
+                device: /Mobile|Android|iP(hone|ad)/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'
+            });
+
+            // Agar user tab band kare, to onDisconnect se remove ho jaye
+            userRef.onDisconnect().remove();
+        }
+
+        // Admin ke liye notifications (Beep + Popup)
+               // Admin ke liye notifications (Only UI Toast)
+        function setupAdminNotifications() {
+            if (!isFirebaseConfigured) return;
+
+            // 1. Jab koi naya message bheje
+            inboxRef.limitToLast(1).on('child_added', (snap) => {
+                const data = snap.val();
+                if (!data || data.replied) return;
+                
+                // Sirf screen par toast dikhayein
+                renderToast("New Message from User!");
+            });
+
+            // 2. Jab koi nayi website khole (Online aye)
+            presenceRef.on('child_added', (snap) => {
+                setTimeout(() => {
+                    if (snap.key !== sessionId) { // Apne aap ko chhor kar
+                        renderToast("Koi nayi website par aya hai (Online)");
+                    }
+                    updateOnlineUsersList();
+                }, 2000);
+            });
+
+            // Jab koi website band kare (Offline ho)
+            presenceRef.on('child_removed', (snap) => {
+                updateOnlineUsersList();
+            });
+        }
+
+        // Sound Effect (Beep)
+        function playNotificationSound() {
+            try {
+                // Base64 encoded short beep sound (No external file needed)
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 800; // Frequency (Hz)
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.15); // 0.15 seconds duration
+            } catch (e) {
+                console.log("Audio not supported");
+            }
+        }
+
+        // Browser Popup Notification (Background mein bhi aayega)
+        function showBrowserNotification(title, body) {
+            if (!("Notification" in window)) return;
+            if (Notification.permission === "granted") {
+                new Notification(title, {
+                    body: body,
+                    icon: "chatgpt.png" // Aapka favicon
+                });
+            }
+        }
+                // Online Users List ko update karna
+        function updateOnlineUsersList() {
+            if (!isFirebaseConfigured || !presenceRef) return;
+            
+            presenceRef.once('value').then((snap) => {
+                const listDiv = document.getElementById('online-users-list');
+                if (!listDiv) return;
+                
+                const data = snap.val();
+                if (!data) {
+                    listDiv.innerHTML = '<span class="text-secondary">Koi online nahi hai.</span>';
+                    return;
+                }
+                
+                const users = Object.keys(data);
+                let html = '';
+                let count = 0;
+                
+                users.forEach(id => {
+                    count++;
+                    const device = data[id].device || 'Unknown';
+                    const time = new Date(data[id].timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const isMe = id === sessionId ? ' (You)' : '';
+                    
+                    html += `<div class="d-flex justify-content-between align-items-center mb-1 pb-1" style="border-bottom: 1px solid #333;">
+                        <span>👤 User: ${id.substring(0, 8)}...${isMe}</span>
+                        <span class="badge bg-secondary" style="font-size: 10px;">${device} · ${time}</span>
+                    </div>`;
+                });
+                
+                listDiv.innerHTML = html + `<div class="text-success mt-1 fw-bold">Total Online: ${count}</div>`;
+            });
+        }
+
         // Launch application
         bootstrapApplication();
     </script>
